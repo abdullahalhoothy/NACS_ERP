@@ -47,7 +47,7 @@ jobs:
           fi
 
           # Clone the repository to /home/root
-          git clone https://$GITHUB_TOKEN@github.com/dkhawaja/NACS_ERP /home/root/ || (cd /home/root/NACS_ERP && git pull)
+          git clone https://$GITHUB_TOKEN@github.com/dkhawaja/NACS_ERP /home/root/NACS_ERP || (cd /home/root/NACS_ERP && git pull)
 
           # Copy NGINX configuration from the project directory
           cp /home/root/NACS_ERP/erpnext/nginx/proxy_to_localhost.conf /etc/nginx/sites-available/proxy_to_localhost.conf
