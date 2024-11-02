@@ -23,6 +23,7 @@ jobs:
       env:
         SERVER_IP: 37.27.33.129
         SERVER_USER: root
+        GITHUB_TOKEN: ${{ secrets.secret }}
       run: |
         ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'EOF'
           # Update and upgrade the package list
@@ -46,7 +47,7 @@ jobs:
           fi
 
           # Clone the repository to /home/root
-          git clone https://github.com/your-username/your-repository.git /home/root/ || (cd /home/root/NACS_ERP && git pull)
+          git clone https://$GITHUB_TOKEN@github.com/dkhawaja/NACS_ERP /home/root/ || (cd /home/root/NACS_ERP && git pull)
 
           # Copy NGINX configuration from the project directory
           cp /home/root/NACS_ERP/erpnext/nginx/proxy_to_localhost.conf /etc/nginx/sites-available/proxy_to_localhost.conf
