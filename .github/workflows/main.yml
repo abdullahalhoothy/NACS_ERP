@@ -53,8 +53,15 @@ jobs:
               cd /root/NACS_ERP && git pull
           fi
 
-          # Check if the NGINX configuration file exists
-          NGINX_CONF="/root/NACS_ERP/erpnext/nginx/proxy_to_localhost.conf"
+          # Ensure the NGINX configuration directory exists
+          NGINX_CONF_DIR="/root/NACS_ERP/erpnext/nginx"
+          if [ ! -d "$NGINX_CONF_DIR" ]; then
+              mkdir -p "$NGINX_CONF_DIR"
+              echo "Created NGINX configuration directory at $NGINX_CONF_DIR"
+          fi
+
+          # Create NGINX configuration file if it does not exist
+          NGINX_CONF="$NGINX_CONF_DIR/proxy_to_localhost.conf"
           if [ ! -f "$NGINX_CONF" ]; then
               echo "NGINX configuration file not found! Creating it."
               echo 'server {
