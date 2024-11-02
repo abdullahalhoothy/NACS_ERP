@@ -1,0 +1,61 @@
+name: Full Server Setup and Deployment
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Install SSH Key
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.key }}
+    
+    - name: SSH into server and set up environment
+      env:
+        SERVER_IP: 37.27.33.129
+        SERVER_USER: root
+      run: |
+        ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'EOF'
+          # Update and upgrade the package list
+          apt-get update && apt-get upgrade -y
+
+          # Install Docker if it's not already installed
+          if ! command -v docker &> /dev/null; then
+            curl -fsSL https://get.docker.com -o get-docker.sh
+            sh get-docker.sh
+          fi
+          
+          # Install Docker Compose if it's not already installed
+          if ! command -v docker-compose &> /dev/null; then
+            curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            chmod +x /usr/local/bin/docker-compose
+          fi
+
+          # Install NGINX if it's not already installed
+          if ! command -v nginx &> /dev/null; then
+            apt-get install -y nginx
+          fi
+
+          # Clone the repository to /home/root
+          git clone https://github.com/your-username/your-repository.git /home/root/ || (cd /home/root/NACS_ERP && git pull)
+
+          # Copy NGINX configuration from the project directory
+          cp /home/root/NACS_ERP/erpnext/nginx/proxy_to_localhost.conf /etc/nginx/sites-available/proxy_to_localhost.conf
+
+          # Link to enable the site and reload NGINX
+          ln -sf /etc/nginx/sites-available/proxy_to_localhost.conf /etc/nginx/sites-enabled/
+          nginx -s reload
+
+          # Change directory to project and run Docker Compose with specified file
+          cd /home/root/NACS_ERP
+          docker-compose -f pwd.yml up -d
+        EOF
