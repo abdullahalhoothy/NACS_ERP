@@ -2,9 +2,6 @@ name: Full Server Setup and Deployment
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
 
 jobs:
   deploy:
