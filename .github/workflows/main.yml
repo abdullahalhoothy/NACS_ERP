@@ -46,17 +46,45 @@ jobs:
             apt-get install -y nginx
           fi
 
-          # Clone the repository to /home/root
-          git clone https://$GITHUB_TOKEN@github.com/dkhawaja/NACS_ERP /root/NACS_ERP || (cd /root/NACS_ERP && git pull)
+          # Clone the repository to /home/root/NACS_ERP
+          if [ ! -d "/home/root/NACS_ERP" ]; then
+              git clone https://$GITHUB_TOKEN@github.com/dkhawaja/NACS_ERP /root/NACS_ERP
+          else
+              cd /root/NACS_ERP && git pull
+          fi
 
-          # Copy NGINX configuration from the project directory
+          # List files to check structure
+          ls -la /root/NACS_ERP
+
+          # Check if the NGINX configuration file exists, create if it does not
+          if [ ! -f "/root/NACS_ERP/erpnext/nginx/proxy_to_localhost.conf" ]; then
+              echo "NGINX configuration file not found! Creating default configuration."
+              echo 'server {
+                  listen 80;
+                  server_name 37.27.33.129;
+
+                  location / {
+                      proxy_pass http://localhost:8080;
+                      proxy_set_header Host $host;
+                      proxy_set_header X-Real-IP $remote_addr;
+                      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                      proxy_set_header X-Forwarded-Proto $scheme;
+                  }
+              }' > /root/NACS_ERP/erpnext/nginx/proxy_to_localhost.conf
+          fi
+
+          # Copy NGINX configuration to the sites-available directory
           cp /root/NACS_ERP/erpnext/nginx/proxy_to_localhost.conf /etc/nginx/sites-available/proxy_to_localhost.conf
 
-          # Link to enable the site and reload NGINX
-          ln -sf /etc/nginx/sites-available/proxy_to_localhost.conf /etc/nginx/sites-enabled/
+          # Link to enable the site if it does not exist
+          if [ ! -L "/etc/nginx/sites-enabled/proxy_to_localhost.conf" ]; then
+              ln -sf /etc/nginx/sites-available/proxy_to_localhost.conf /etc/nginx/sites-enabled/
+          fi
+
+          # Reload NGINX configuration
           nginx -s reload
 
           # Change directory to project and run Docker Compose with specified file
-          cd /home/root/NACS_ERP
+          cd /root/NACS_ERP
           docker-compose -f pwd.yml up -d
         EOF
