@@ -64,7 +64,7 @@ jobs:
           fi
           
           # Ensure the NGINX configuration directory exists
-          NGINX_CONF_DIR="/root/NACS_ERP/erpnext/nginx"
+          NGINX_CONF_DIR="/root/NACS_ERP/nginx"
           if [ ! -d "$NGINX_CONF_DIR" ]; then
             mkdir -p "$NGINX_CONF_DIR"
             echo "Created NGINX configuration directory at $NGINX_CONF_DIR"
