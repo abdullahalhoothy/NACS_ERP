@@ -20,14 +20,15 @@ jobs:
       env:
         SERVER_IP: 95.217.156.31
         SERVER_USER: root
+        VOLUME: "HC_Volume_101598217"
       run: |
         ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'EOF'
         # Check and create missing folders
-        FOLDERS=("/mnt/HC_Volume_101445903/db-data" 
-                 "/mnt/HC_Volume_101445903/logs" 
-                 "/mnt/HC_Volume_101445903/redis-cache-data"
-                 "/mnt/HC_Volume_101445903/redis-queue-data"
-                 "/mnt/HC_Volume_101445903/sites")
+        FOLDERS=("/mnt/$VOLUME/db-data" 
+                 "/mnt/$VOLUME/logs" 
+                 "/mnt/$VOLUME/redis-cache-data"
+                 "/mnt/$VOLUME/redis-queue-data"
+                 "/mnt/$VOLUME/sites")
         for FOLDER in "${FOLDERS[@]}"; do
           if [ ! -d "$FOLDER" ]; then
             mkdir -p "$FOLDER"
