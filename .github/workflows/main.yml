@@ -20,7 +20,6 @@ jobs:
       env:
         SERVER_IP: 37.27.33.129
         SERVER_USER: root
-        GITHUB_TOKEN: ${{ secrets.secret }}
       run: |
         ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'EOF'
 
@@ -43,7 +42,7 @@ jobs:
 
           # Clone the repository to /root/NACS_ERP
           if [ ! -d "/root/NACS_ERP" ]; then
-              git clone https://$GITHUB_TOKEN@github.com/dkhawaja/NACS_ERP /root/NACS_ERP
+              git clone https://github.com/abdullahalhoothy/NACS_ERP.git /root/NACS_ERP
           else
               cd /root/NACS_ERP && git pull
           fi
