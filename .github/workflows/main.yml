@@ -1,34 +1,34 @@
 name: Full Server Setup and Deployment
-
 on:
   workflow_dispatch:
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
-
-    - name: Install SSH Key
-      uses: webfactory/ssh-agent@v0.5.3
-      with:
-        ssh-private-key: ${{ secrets.key }}
-    
-    - name: SSH into server and set up environment
-      env:
-        SERVER_IP: 95.217.156.31
-        SERVER_USER: root
-      run: |
-        ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'EOF'
-        
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      
+      - name: Install SSH Key
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.key }}
+      
+      - name: SSH into server and set up environment
+        env:
+          SERVER_IP: 95.217.156.31
+          SERVER_USER: root
+        run: |
+          ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << EOF
+          
           # Check and create missing folders
-          FOLDERS=("/mnt/HC_Volume_101598242/db-data" 
-                   "/mnt/HC_Volume_101598242/logs" 
-                   "/mnt/HC_Volume_101598242/redis-cache-data"
-                   "/mnt/HC_Volume_101598242/redis-queue-data"
-                   "/mnt/HC_Volume_101598242/sites")
+          FOLDERS=(
+            "/mnt/HC_Volume_101598242/db-data"
+            "/mnt/HC_Volume_101598242/logs"
+            "/mnt/HC_Volume_101598242/redis-cache-data"
+            "/mnt/HC_Volume_101598242/redis-queue-data"
+            "/mnt/HC_Volume_101598242/sites"
+          )
+          
           for FOLDER in "${FOLDERS[@]}"; do
             if [ ! -d "$FOLDER" ]; then
               mkdir -p "$FOLDER"
@@ -37,7 +37,7 @@ jobs:
               echo "Folder already exists: $FOLDER"
             fi
           done
-
+          
           # Install Docker if it's not already installed
           if ! command -v docker &> /dev/null; then
             curl -fsSL https://get.docker.com -o get-docker.sh
@@ -49,59 +49,59 @@ jobs:
             curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
             chmod +x /usr/local/bin/docker-compose
           fi
-
+          
           # Install NGINX if it's not already installed
           if ! command -v nginx &> /dev/null; then
             apt update && apt upgrade && apt-get install -y nginx
           fi
-
+          
           # Clone the repository to /root/NACS_ERP
           if [ ! -d "/root/NACS_ERP" ]; then
-              git clone https://github.com/abdullahalhoothy/NACS_ERP.git /root/NACS_ERP
+            git clone https://github.com/abdullahalhoothy/NACS_ERP.git /root/NACS_ERP
           else
-              cd /root/NACS_ERP && git pull
+            cd /root/NACS_ERP && git pull
           fi
-
+          
           # Ensure the NGINX configuration directory exists
           NGINX_CONF_DIR="/root/NACS_ERP/erpnext/nginx"
           if [ ! -d "$NGINX_CONF_DIR" ]; then
-              mkdir -p "$NGINX_CONF_DIR"
-              echo "Created NGINX configuration directory at $NGINX_CONF_DIR"
+            mkdir -p "$NGINX_CONF_DIR"
+            echo "Created NGINX configuration directory at $NGINX_CONF_DIR"
           fi
-
+          
           # Create NGINX configuration file if it does not exist
           NGINX_CONF="$NGINX_CONF_DIR/proxy_to_localhost.conf"
-
+          
           # Copy NGINX configuration to the sites-available directory
           cp "$NGINX_CONF" /etc/nginx/sites-available/proxy_to_localhost.conf
           if [ $? -eq 0 ]; then
-              echo "Successfully copied NGINX configuration to /etc/nginx/sites-available/"
+            echo "Successfully copied NGINX configuration to /etc/nginx/sites-available/"
           else
-              echo "Failed to copy NGINX configuration."
+            echo "Failed to copy NGINX configuration."
           fi
-
+          
           # Check if the symlink exists, create if it does not
           if [ ! -L "/etc/nginx/sites-enabled/proxy_to_localhost.conf" ]; then
-              ln -sf /etc/nginx/sites-available/proxy_to_localhost.conf /etc/nginx/sites-enabled/
-              echo "Created symlink for NGINX site."
+            ln -sf /etc/nginx/sites-available/proxy_to_localhost.conf /etc/nginx/sites-enabled/
+            echo "Created symlink for NGINX site."
           else
-              echo "Symlink for NGINX site already exists."
+            echo "Symlink for NGINX site already exists."
           fi
-
+          
           # Reload NGINX configuration
           nginx -s reload
           if [ $? -eq 0 ]; then
-              echo "NGINX reloaded successfully."
+            echo "NGINX reloaded successfully."
           else
-              echo "Failed to reload NGINX."
+            echo "Failed to reload NGINX."
           fi
-
+          
           # Change directory to project and run Docker Compose with specified file
           cd /root/NACS_ERP
           docker-compose -f pwd.yml up -d
           if [ $? -eq 0 ]; then
-              echo "Docker Compose started successfully."
+            echo "Docker Compose started successfully."
           else
-              echo "Failed to start Docker Compose."
+            echo "Failed to start Docker Compose."
           fi
-        EOF
+          EOF
