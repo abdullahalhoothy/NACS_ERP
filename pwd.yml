@@ -197,28 +197,28 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: /mnt/HC_Volume_101598217/db-data
+      device: /mnt/HC_Volume_101598242/db-data
   redis-queue-data:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /mnt/HC_Volume_101598217/redis-queue-data
+      device: /mnt/HC_Volume_101598242/redis-queue-data
   redis-cache-data:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /mnt/HC_Volume_101598217/redis-cache-data
+      device: /mnt/HC_Volume_101598242/redis-cache-data
   sites:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /mnt/HC_Volume_101598217/sites
+      device: /mnt/HC_Volume_101598242/sites
   logs:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /mnt/HC_Volume_101598217/logs
+      device: /mnt/HC_Volume_101598242/logs
