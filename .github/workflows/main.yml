@@ -22,20 +22,21 @@ jobs:
         SERVER_USER: root
       run: |
         ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'EOF'
-        # Check and create missing folders
-        FOLDERS=("/mnt/HC_Volume_101598242/db-data" 
-                 "/mnt/HC_Volume_101598242/logs" 
-                 "/mnt/HC_Volume_101598242/redis-cache-data"
-                 "/mnt/HC_Volume_101598242/redis-queue-data"
-                 "/mnt/HC_Volume_101598242/sites")
-        for FOLDER in "${FOLDERS[@]}"; do
-          if [ ! -d "$FOLDER" ]; then
-            mkdir -p "$FOLDER"
-            echo "Created folder: $FOLDER"
-          else
-            echo "Folder already exists: $FOLDER"
-          fi
-        done
+        
+          # Check and create missing folders
+          FOLDERS=("/mnt/HC_Volume_101598242/db-data" 
+                   "/mnt/HC_Volume_101598242/logs" 
+                   "/mnt/HC_Volume_101598242/redis-cache-data"
+                   "/mnt/HC_Volume_101598242/redis-queue-data"
+                   "/mnt/HC_Volume_101598242/sites")
+          for FOLDER in "${FOLDERS[@]}"; do
+            if [ ! -d "$FOLDER" ]; then
+              mkdir -p "$FOLDER"
+              echo "Created folder: $FOLDER"
+            else
+              echo "Folder already exists: $FOLDER"
+            fi
+          done
 
           # Install Docker if it's not already installed
           if ! command -v docker &> /dev/null; then
