@@ -93,6 +93,7 @@ jobs:
           
           # Change directory to project and run Docker Compose
           cd /root/NACS_ERP
+          docker-compose -f pwd.yml down
           docker-compose -f pwd.yml up -d
           echo "Docker Compose started successfully."
           
