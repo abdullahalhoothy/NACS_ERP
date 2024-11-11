@@ -18,7 +18,7 @@ jobs:
           SERVER_IP: 95.217.156.31
           SERVER_USER: root
         run: |
-          ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << EOF
+          ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'EOF'
           
           # Check and create missing folders
           FOLDERS=(
@@ -69,13 +69,14 @@ jobs:
             echo "Created NGINX configuration directory at $NGINX_CONF_DIR"
           fi
           
-          # Create NGINX configuration file if it does not exist
+          # Check if the NGINX configuration file exists, copy it to sites-available if it does
           NGINX_CONF="$NGINX_CONF_DIR/proxy_to_localhost.conf"
           if [ -f "$NGINX_CONF" ]; then
             cp "$NGINX_CONF" /etc/nginx/sites-available/proxy_to_localhost.conf
             echo "Successfully copied NGINX configuration to /etc/nginx/sites-available/."
           else
             echo "NGINX configuration file not found at $NGINX_CONF."
+            exit 1
           fi
           
           # Create symlink if it does not exist
