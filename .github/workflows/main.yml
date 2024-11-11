@@ -7,7 +7,7 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
-
+      
       - name: Install SSH Key
         uses: webfactory/ssh-agent@v0.5.3
         with:
@@ -18,12 +18,9 @@ jobs:
           SERVER_IP: 95.217.156.31
           SERVER_USER: root
         run: |
-          set -e  # Exit on any error
-          echo "Starting SSH connection to $SERVER_USER@$SERVER_IP"
-          ssh -v -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << EOF
+          ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << EOF
           
           # Check and create missing folders
-          echo "Checking and creating folders..."
           FOLDERS=(
             "/mnt/HC_Volume_101598242/db-data"
             "/mnt/HC_Volume_101598242/logs"
@@ -33,7 +30,6 @@ jobs:
           )
           
           for FOLDER in "${FOLDERS[@]}"; do
-            echo "FOLDER: $FOLDER"
             if [ ! -d "$FOLDER" ]; then
               mkdir -p "$FOLDER"
               echo "Created folder: $FOLDER"
@@ -43,30 +39,23 @@ jobs:
           done
           
           # Install Docker if it's not already installed
-          echo "Checking Docker installation..."
           if ! command -v docker &> /dev/null; then
-            echo "Docker not found, installing..."
             curl -fsSL https://get.docker.com -o get-docker.sh
             sh get-docker.sh
           fi
           
           # Install Docker Compose if it's not already installed
-          echo "Checking Docker Compose installation..."
           if ! command -v docker-compose &> /dev/null; then
-            echo "Docker Compose not found, installing..."
             curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
             chmod +x /usr/local/bin/docker-compose
           fi
           
           # Install NGINX if it's not already installed
-          echo "Checking NGINX installation..."
           if ! command -v nginx &> /dev/null; then
-            echo "NGINX not found, installing..."
             apt update && apt upgrade && apt-get install -y nginx
           fi
           
           # Clone the repository to /root/NACS_ERP
-          echo "Cloning repository..."
           if [ ! -d "/root/NACS_ERP" ]; then
             git clone https://github.com/abdullahalhoothy/NACS_ERP.git /root/NACS_ERP
           else
@@ -75,39 +64,35 @@ jobs:
           
           # Ensure the NGINX configuration directory exists
           NGINX_CONF_DIR="/root/NACS_ERP/erpnext/nginx"
-          echo "NGINX_CONF_DIR: $NGINX_CONF_DIR"
           if [ ! -d "$NGINX_CONF_DIR" ]; then
             mkdir -p "$NGINX_CONF_DIR"
             echo "Created NGINX configuration directory at $NGINX_CONF_DIR"
-          else
-            echo "NGINX configuration directory already exists."
           fi
           
           # Create NGINX configuration file if it does not exist
           NGINX_CONF="$NGINX_CONF_DIR/proxy_to_localhost.conf"
-          echo "NGINX_CONF: $NGINX_CONF"
           if [ -f "$NGINX_CONF" ]; then
             cp "$NGINX_CONF" /etc/nginx/sites-available/proxy_to_localhost.conf
-            echo "Successfully copied NGINX configuration."
+            echo "Successfully copied NGINX configuration to /etc/nginx/sites-available/."
           else
             echo "NGINX configuration file not found at $NGINX_CONF."
           fi
           
-          # Check if the symlink exists, create if it does not
-          echo "Checking NGINX symlink..."
-          if [ -f "/etc/nginx/sites-available/proxy_to_localhost.conf" ]; then
+          # Create symlink if it does not exist
+          if [ ! -L "/etc/nginx/sites-enabled/proxy_to_localhost.conf" ]; then
             ln -sf /etc/nginx/sites-available/proxy_to_localhost.conf /etc/nginx/sites-enabled/
             echo "Created symlink for NGINX site."
           else
-            echo "NGINX configuration file not found in /etc/nginx/sites-available."
+            echo "Symlink already exists."
           fi
           
           # Reload NGINX configuration
-          echo "Reloading NGINX..."
           nginx -s reload
+          echo "NGINX reloaded successfully."
           
-          # Change directory to project and run Docker Compose with specified file
+          # Change directory to project and run Docker Compose
           cd /root/NACS_ERP
-          echo "Running Docker Compose..."
           docker-compose -f pwd.yml up -d
+          echo "Docker Compose started successfully."
+          
           EOF
