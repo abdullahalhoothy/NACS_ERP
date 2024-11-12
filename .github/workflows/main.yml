@@ -22,11 +22,11 @@ jobs:
           
           # Check and create missing folders
           FOLDERS=(
-            "/mnt/HC_Volume_101598242/db-data"
-            "/mnt/HC_Volume_101598242/logs"
-            "/mnt/HC_Volume_101598242/redis-cache-data"
-            "/mnt/HC_Volume_101598242/redis-queue-data"
-            "/mnt/HC_Volume_101598242/sites"
+            "/mnt/HC_Volume_101599723/db-data"
+            "/mnt/HC_Volume_101599723/logs"
+            "/mnt/HC_Volume_101599723/redis-cache-data"
+            "/mnt/HC_Volume_101599723/redis-queue-data"
+            "/mnt/HC_Volume_101599723/sites"
           )
           
           for FOLDER in "${FOLDERS[@]}"; do
