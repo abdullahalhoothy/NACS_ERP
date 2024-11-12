@@ -52,7 +52,7 @@ jobs:
           
           # Install NGINX if it's not already installed
           if ! command -v nginx &> /dev/null; then
-            apt update && apt upgrade && apt-get install -y nginx
+            apt-get update && apt-get install -y nginx
           fi
           
           # Clone the repository to /root/NACS_ERP
