@@ -1,4 +1,5 @@
 name: Full Server Setup and Deployment
+
 on:
   workflow_dispatch:
 env:
@@ -9,17 +10,24 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to Server
+      - name: Deploy using ssh
         uses: appleboy/ssh-action@master
+        env:
+          HC_VOLUME: ${{ secrets.HC_VOLUME }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
         with:
-          host: ${{ env.SERVER_IP }}
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.ERPNEXT_SSH_KEY }}
+          port: 22
+          envs: SERVER_IP,HC_VOLUME
           script: |
             FOLDERS=(
-              "${{ env.HC_VOLUME }}/db-data"
-              "${{ env.HC_VOLUME }}/logs"
-              "${{ env.HC_VOLUME }}/redis-cache-data"
-              "${{ env.HC_VOLUME }}/redis-queue-data"
-              "${{ env.HC_VOLUME }}/sites"
+              "${{ secrets.HC_VOLUME}}/db-data"
+              "${{ secrets.HC_VOLUME}}/logs"
+              "${{ secrets.HC_VOLUME}}/redis-cache-data"
+              "${{ secrets.HC_VOLUME}}/redis-queue-data"
+              "${{ secrets.HC_VOLUME}}/sites"
             )
             
             for FOLDER in "${FOLDERS[@]}"; do
@@ -66,7 +74,7 @@ jobs:
             cat > "$NGINX_CONF_DIR/proxy_to_localhost.conf" << EOF
             server {
                 listen 80;
-                server_name ${{ env.SERVER_IP }};
+                server_name ${{ secrets.SERVER_IP }};
                 location / {
                     proxy_pass http://localhost:8080;
                     proxy_set_header Host \$host;
@@ -101,8 +109,8 @@ jobs:
             
             # Change directory to project and run Docker Compose
             cd /root/NACS_ERP
-            sed -i "s|__HC_VOLUME__|${{ env.HC_VOLUME }}|g" pwd.yml
-            sed -i "s|__HC_VOLUME__|${{ env.HC_VOLUME }}|g" compose.yaml
+            sed -i "s|__HC_VOLUME__|${{ secrets.HC_VOLUME}}|g" pwd.yml
+            sed -i "s|__HC_VOLUME__|${{ secrets.HC_VOLUME}}|g" compose.yaml
             docker-compose -f pwd.yml down
             docker-compose -f pwd.yml up -d
             echo "Docker Compose started successfully."
