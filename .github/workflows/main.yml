@@ -1,27 +1,25 @@
 name: Full Server Setup and Deployment
 on:
   workflow_dispatch:
+env:
+  HC_VOLUME: /mnt/HC_Volume_101636316
+  SERVER_IP: 95.217.156.31
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-      
       - name: Deploy to Server
         uses: appleboy/ssh-action@master
         with:
-          host: 95.217.156.31
-          username: root
-          key: ${{ secrets.key }}
+          host: ${{ env.SERVER_IP }}
           script: |
-            # Check and create missing folders
             FOLDERS=(
-              "/mnt/HC_Volume_101599723/db-data"
-              "/mnt/HC_Volume_101599723/logs"
-              "/mnt/HC_Volume_101599723/redis-cache-data"
-              "/mnt/HC_Volume_101599723/redis-queue-data"
-              "/mnt/HC_Volume_101599723/sites"
+              "${{ env.HC_VOLUME }}/db-data"
+              "${{ env.HC_VOLUME }}/logs"
+              "${{ env.HC_VOLUME }}/redis-cache-data"
+              "${{ env.HC_VOLUME }}/redis-queue-data"
+              "${{ env.HC_VOLUME }}/sites"
             )
             
             for FOLDER in "${FOLDERS[@]}"; do
@@ -64,6 +62,21 @@ jobs:
               echo "Created NGINX configuration directory at $NGINX_CONF_DIR"
             fi
             
+            # Create NGINX config file using env variable
+            cat > "$NGINX_CONF_DIR/proxy_to_localhost.conf" << EOF
+            server {
+                listen 80;
+                server_name ${{ env.SERVER_IP }};
+                location / {
+                    proxy_pass http://localhost:8080;
+                    proxy_set_header Host \$host;
+                    proxy_set_header X-Real-IP \$remote_addr;
+                    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto \$scheme;
+                }
+            }
+            EOF
+
             # Check if the NGINX configuration file exists, copy it to sites-available if it does
             NGINX_CONF="$NGINX_CONF_DIR/proxy_to_localhost.conf"
             if [ -f "$NGINX_CONF" ]; then
@@ -88,6 +101,8 @@ jobs:
             
             # Change directory to project and run Docker Compose
             cd /root/NACS_ERP
+            sed -i "s|__HC_VOLUME__|${{ env.HC_VOLUME }}|g" pwd.yml
+            sed -i "s|__HC_VOLUME__|${{ env.HC_VOLUME }}|g" compose.yaml
             docker-compose -f pwd.yml down
             docker-compose -f pwd.yml up -d
             echo "Docker Compose started successfully."
