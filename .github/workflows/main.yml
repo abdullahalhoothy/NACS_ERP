@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 env:
   HC_VOLUME: /mnt/HC_Volume_101636316
-  SERVER_IP: 95.217.156.31
+  VPS_HOST: 95.217.156.31
 
 jobs:
   deploy:
@@ -14,13 +14,13 @@ jobs:
         uses: appleboy/ssh-action@master
         env:
           HC_VOLUME: ${{ secrets.HC_VOLUME }}
-          SERVER_IP: ${{ secrets.SERVER_IP }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
         with:
-          host: ${{ secrets.SERVER_IP }}
+          host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.ERPNEXT_SSH_KEY }}
           port: 22
-          envs: SERVER_IP,HC_VOLUME
+          envs: VPS_HOST,HC_VOLUME
           script: |
             FOLDERS=(
               "${{ secrets.HC_VOLUME}}/db-data"
@@ -74,7 +74,7 @@ jobs:
             cat > "$NGINX_CONF_DIR/proxy_to_localhost.conf" << EOF
             server {
                 listen 80;
-                server_name ${{ secrets.SERVER_IP }};
+                server_name ${{ secrets.VPS_HOST }};
                 location / {
                     proxy_pass http://localhost:8080;
                     proxy_set_header Host \$host;
