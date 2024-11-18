@@ -1,11 +1,8 @@
 name: Full Server Setup and Deployment
-
 on:
   workflow_dispatch:
 env:
   HC_VOLUME: /mnt/HC_Volume_101636316
-  VPS_HOST: 95.217.156.31
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -13,7 +10,6 @@ jobs:
       - name: Deploy using ssh
         uses: appleboy/ssh-action@master
         env:
-          HC_VOLUME: ${{ secrets.HC_VOLUME }}
           VPS_HOST: ${{ secrets.VPS_HOST }}
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -23,11 +19,11 @@ jobs:
           envs: VPS_HOST,HC_VOLUME
           script: |
             FOLDERS=(
-              "${{ secrets.HC_VOLUME}}/db-data"
-              "${{ secrets.HC_VOLUME}}/logs"
-              "${{ secrets.HC_VOLUME}}/redis-cache-data"
-              "${{ secrets.HC_VOLUME}}/redis-queue-data"
-              "${{ secrets.HC_VOLUME}}/sites"
+              "$HC_VOLUME/db-data"
+              "$HC_VOLUME/logs"
+              "$HC_VOLUME/redis-cache-data"
+              "$HC_VOLUME/redis-queue-data"
+              "$HC_VOLUME/sites"
             )
             
             for FOLDER in "${FOLDERS[@]}"; do
@@ -109,8 +105,8 @@ jobs:
             
             # Change directory to project and run Docker Compose
             cd /root/NACS_ERP
-            sed -i "s|__HC_VOLUME__|${{ secrets.HC_VOLUME}}|g" pwd.yml
-            sed -i "s|__HC_VOLUME__|${{ secrets.HC_VOLUME}}|g" compose.yaml
+            sed -i "s|__HC_VOLUME__|$HC_VOLUME|g" pwd.yml
+            sed -i "s|__HC_VOLUME__|$HC_VOLUME|g" compose.yaml
             docker-compose -f pwd.yml down
             docker-compose -f pwd.yml up -d
             echo "Docker Compose started successfully."
