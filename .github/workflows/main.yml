@@ -13,7 +13,7 @@ jobs:
           VPS_HOST: ${{ secrets.VPS_HOST }}
         with:
           host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
+          username: root
           key: ${{ secrets.ERPNEXT_SSH_KEY }}
           port: 22
           envs: VPS_HOST,HC_VOLUME
